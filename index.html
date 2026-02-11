@@ -6,7 +6,6 @@
     <title>Be My Valentine?</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Import des Polices */
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
 
         body {
@@ -22,7 +21,6 @@
             position: relative;
         }
 
-        /* --- Cœurs de fond --- */
         .bg-heart {
             position: absolute;
             top: -10vh;
@@ -38,7 +36,6 @@
             100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
         }
 
-        /* --- La Carte --- */
         .card {
             background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(10px);
@@ -76,7 +73,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- Groupe de boutons --- */
         .btn-group {
             display: flex;
             justify-content: center;
@@ -84,6 +80,7 @@
             gap: 20px;
             height: 60px; 
             width: 100%;
+            position: relative; /* Pour gérer le z-index relatif */
         }
 
         button {
@@ -103,31 +100,25 @@
             background: #ff4757;
             color: white;
             box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-            z-index: 100;
-            transition: transform 0.2s;
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Effet rebond */
         }
-        #yesBtn:hover {
-            transform: scale(1.05);
-            background: #ff2e43;
-        }
-
+        
         /* --- Bouton NO --- */
         #noBtn {
             background: white;
             color: #ff4757;
             border: 2px solid #ff4757;
-            z-index: 99999; /* Z-index maximum */
-            transition: top 0.3s ease, left 0.3s ease; /* Mouvement fluide */
+            z-index: 99999; 
+            transition: top 0.2s ease, left 0.2s ease, transform 0.2s ease; 
         }
 
-        /* --- Bouton Surprise Final --- */
         #surpriseBtn {
             background: #6c5ce7;
             color: white;
             box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
             margin-top: 10px;
             animation: pulse 2s infinite;
-            transition: transform 0.2s;
         }
 
         @keyframes pulse {
@@ -136,7 +127,6 @@
             100% { transform: scale(1); }
         }
 
-        /* Classe utilitaire */
         .hidden {
             display: none !important;
         }
@@ -147,7 +137,6 @@
     <div id="background-hearts"></div>
 
     <div class="card">
-        
         <div id="question-screen">
             <div class="gif-area">
                 <img id="main-gif" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJjczc1aDVuYjF6aW16aGZ4eW16aGZ4eW16aGZ4eCZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/cLS1cfxvGOPVpf9g3y/giphy.gif" alt="Cute Cat">
@@ -171,11 +160,10 @@
             
             <button id="surpriseBtn" onclick="goToSurprise()">Click here for your gift 🎁</button>
         </div>
-
     </div>
 
     <script>
-        // --- 1. Création des cœurs de fond ---
+        // --- 1. Background Hearts ---
         function createHearts() {
             const container = document.getElementById('background-hearts');
             const symbols = ['❤️', '💖', '💕', '💗'];
@@ -190,33 +178,59 @@
         }
         createHearts();
 
-        // --- 2. Variables JS ---
+        // --- 2. Variables & Textes ---
         const noBtn = document.getElementById('noBtn');
         const yesBtn = document.getElementById('yesBtn');
-        // Nouvelle variable pour l'image principale
         const mainGif = document.getElementById('main-gif'); 
         const questionScreen = document.getElementById('question-screen');
         const successScreen = document.getElementById('success-screen');
 
-        // --- 3. Fonction quand on essaie de cliquer sur NO ---
+        // Les phrases qui changent sur le bouton NON
+        const noTexts = [
+            "Are you sure?", 
+            "Really sure?", 
+            "Think again!", 
+            "Last chance!", 
+            "Surely not?", 
+            "You might regret this!", 
+            "Give it another thought!", 
+            "Are you absolutely certain?", 
+            "This could be a mistake!", 
+            "Have a heart!", 
+            "Don't be so cold!", 
+            "Change of heart?", 
+            "Wouldn't you reconsider?", 
+            "Is that your final answer?", 
+            "You're breaking my heart ;("
+        ];
+        
+        let yesScale = 1; // Taille initiale du bouton YES
+
+        // --- 3. Interaction "No" ---
         function moveNoButton() {
-            // --- CHANGEMENT DU GIF ---
-            // On remplace l'image par le chat qui pleure
+            // A. Changement de GIF (Chat qui pleure)
             mainGif.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzdzcDExbTMzMXF0b2p0dGJwd3hsdHkxcjRhZG9uaGl0eTQzMWhjaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/901mxGLGQN2PyCQpoc/giphy.gif";
 
-            // --- DEPLACEMENT DU BOUTON ---
-            // On sort le bouton de la carte pour qu'il ne soit jamais coupé
+            // B. Changement du texte aléatoire sur le bouton NON
+            const randomText = noTexts[Math.floor(Math.random() * noTexts.length)];
+            noBtn.innerText = randomText;
+
+            // C. Grossissement du bouton YES
+            yesScale += 0.15; // On grossit de 15% à chaque fois
+            yesBtn.style.transform = `scale(${yesScale})`;
+
+            // D. Déplacement du bouton NON
             if (noBtn.parentNode !== document.body) {
                 document.body.appendChild(noBtn);
                 noBtn.style.position = 'fixed';
             }
 
-            // Calcul des nouvelles coordonnées sûres
+            // Calcul des coordonnées (avec sécurité pour la nouvelle taille du texte)
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
-            const btnWidth = noBtn.offsetWidth;
+            const btnWidth = noBtn.offsetWidth; // La largeur change avec le texte !
             const btnHeight = noBtn.offsetHeight;
-            const padding = 50; // Marge de sécurité
+            const padding = 30;
 
             const maxLeft = windowWidth - btnWidth - padding;
             const maxTop = windowHeight - btnHeight - padding;
@@ -228,24 +242,24 @@
             noBtn.style.top = randomY + 'px';
         }
 
-        // --- 4. Fonction quand on clique sur YES ---
+        // --- 4. Interaction "Yes" ---
         function handleYes() {
             triggerConfetti();
             questionScreen.classList.add('hidden');
             successScreen.classList.remove('hidden');
             
-            // On cache le bouton No définitivement
             noBtn.style.display = 'none';
+
+            // On remet la taille normale pour le bouton surprise si besoin, ou juste pour nettoyer
+            yesBtn.style.transform = 'scale(1)';
 
             setTimeout(triggerConfetti, 1000);
         }
 
-        // --- 5. Redirection finale ---
         function goToSurprise() {
             window.location.href = "https://beludark.github.io/LoveFlix/";
         }
 
-        // --- 6. Effet Confettis ---
         function triggerConfetti() {
             const duration = 3000;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
